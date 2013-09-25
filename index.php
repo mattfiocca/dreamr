@@ -1,4 +1,4 @@
 <?php
 
-require_once 'config.php';
+// Bootstrap Dreamr
 require_once 'core/dreamr.php';

@@ -40,6 +40,38 @@ Routes are matched first-only, meaning if a route matches the request path then 
 will be executed and no more routes will be matched. Requests that do not match any
 routes will yield a "404 Not Found" error.
 
-Credits for the route matching function go to Bento:
+Credits
 
+Bento (route matching regex):
 https://github.com/nramenta/bento/blob/master/src/bento.php
+
+George Yates for the Dreamr name
+
+Testing with curl
+
+curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome
+
+curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome/50
+
+curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome/50/comments
+
+curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome/50/dynamic
+
+curl -i -H "Accept: application/json" -X POST -d "firstName=james" http://dev.dreamr.com/welcome
+
+curl -i -H "Accept: application/json" -X PUT -d "phone=1-800-999-9999" http://dev.dreamr.com/welcome/50
+
+curl -i -H "Accept: application/json" -X DELETE http://dev.dreamr.com/welcome/50
+
+# VERB OVERRIDE
+
+curl -i -H "Accept: application/json" -H "X-HTTP-Method-Override: PUT" -X POST -d "phone=1-800-999-9999" http://api.piledrive.com/php 
+
+curl -i -H "Accept: application/json" -H "X-HTTP-Method-Override: DELETE" -X POST http://api.piledrive.com/php
+
+Todo
+
+- configuration settings for when we want to json_decode the php://input stream
+- configuration settings for Content-Type output headers (application/json default?)
+- configuration settings for exposing php or not ( remove X-Powered-By: header, etc )
+- rewrite welcome resource to resemble an example blog post resource
