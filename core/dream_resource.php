@@ -3,49 +3,75 @@
 abstract class DreamResource {
 
 	private $data;
+	public $reset_routes = FALSE;
 
 	public function __construct() {}
 
-	public function route() {
-		
-		$routes = $this->routes();
-		
+	public function run() {
+
+		$resource_name = DreamFactory::$resource_name;
+		$base_routes = array(
+			'get' => array(
+				"/{$resource_name}" => 'find_many',
+				"/{$resource_name}/<#:id>" => 'find'
+			),
+			'post' => array(
+				"/{$resource_name}" => 'create'
+			),
+			'put' => array(
+				"/{$resource_name}/<#:id>" => 'update'
+			),
+			'delete' => array(
+				"/{$resource_name}/<#:id>" => 'delete'
+			)
+		);
+
+		if( $this->reset_routes === TRUE )
+			$routes = $this->routes();
+		else
+			$routes = array_merge_recursive($base_routes, $this->routes());
+
 		if( is_array( $routes ) && array_key_exists(DreamFactory::$method, $routes) )
 		{
 			foreach($routes[DreamFactory::$method] as $route=>$method) {
-				
+
 				if ( DreamFactory::match_route( $route, DreamFactory::$uri, $matches ) ) {
-					
-					// start off with the REST body as the first parameter
-					$params = array( DreamFactory::$body );
+
+					$data = array(
+						'params' => array(),
+						'data' => DreamFactory::$body
+					);
+
 					foreach ( $matches as $key=>$val ) {
 						if (is_string($key))
-							$params[$key] = urldecode($val);
+							$data['params'][$key] = urldecode($val);
 					}
-					
+
 					if( method_exists($this, $method) ) {
-						$this->data = call_user_func_array( array($this, $method), $params );
-					} else {
-						// method doesn't exist
-						$this->status_exit(404);
+						$this->data = call_user_func_array( array($this, $method), $data );
+						$this->output();
+						return;
 					}
 				}
 			}
+
+			// @todo route doesn't exist
+			$this->response(404);
+
 		} else {
-			// broken/missing routes
-			$this->status_exit(500);
+			// @todo broken/missing routes
+			$this->response(500);
 		}
 	}
 
-	public function output() {
+	public function response( $code ) {
+		DreamFactory::set_status($code);
+	}
+
+	private function output() {
 		if( $this->data ) {
 			echo json_encode($this->data);
-			$this->status_exit();
 		}
-	}
-
-	public function status_exit( $code=200 ) {
-		DreamFactory::status_exit( $code );
 	}
 
 	// abstract methods

@@ -2,6 +2,8 @@
 
 class Index extends DreamResource {
 
+	public $reset_routes = TRUE;
+
 	public function routes() {
 		return array(
 			'get' => array(
@@ -10,7 +12,7 @@ class Index extends DreamResource {
 		);
 	}
 
-	public function index( $body ) {
-		return array( );
+	public function index() {
+		$this->response(400);
 	}
 }

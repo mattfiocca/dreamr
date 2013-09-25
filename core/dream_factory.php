@@ -1,10 +1,22 @@
 <?php
 
+/**
+ * Dreamr Factory Class
+ *
+ * @package Dreamr
+ * @license http://opensource.org/licenses/gpl-license.php  GNU Public License
+ * @author Matt Fiocca <matt.fiocca@gmail.com>
+ */
 class DreamFactory {
 
 	public static $core_path;
 	public static $resource_path;
 	public static $blanket_path;
+	public static $custom_config = array();
+
+	private static $body_type = 'json';
+	private static $allowed_body_types = array('json','query_string');
+	private static $associative_json = FALSE;
 
 	public static $uri;
 	public static $segments;
@@ -63,11 +75,9 @@ class DreamFactory {
 
 	public function __construct() {}
 
-	// // static methods
+	public static function start( $custom_config=array() ) {
 
-	public static function fireup() {
 		self::set_headers();
-		
 		self::$core_path = dirname( __FILE__ );
 		self::$resource_path = realpath( dirname( __FILE__ ) . '/../' ) . '/resources';
 		self::$blanket_path = realpath( dirname( __FILE__ ) . '/../' ) . '/blankets';
@@ -75,37 +85,58 @@ class DreamFactory {
 		self::$segments = array_values(array_filter(explode('/', self::$uri)));
 		self::$method = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'get';
 		self::$resource_name = isset(self::$segments[0]) ? preg_replace('/[^a-z0-9]/', '', self::$segments[0]) : 'index';
+		self::$custom_config = array_merge_recursive(self::$custom_config, $custom_config);
 
 		// read STDIN for REST POST and PUT bodies
-		self::$body = file_get_contents('php://input'); 
-	}
+		$body = file_get_contents('php://input');
 
-	public static function create_resource() {
-		
-		$class_file = self::$resource_path.'/'.self::$resource_name.'.php'; 
-		
-		if( self::$resource_name && file_exists( $class_file ) ) {
-			
-			require_once $class_file;
-			
-			$resource_class = ucfirst( strtolower( self::$resource_name ) );
-			if( class_exists( $resource_class ) ) {
+		switch( self::$body_type ) {
 
-				return new $resource_class;
+			case 'json':
+				$data = json_decode($body,self::$associative_json);
+				if( $data )
+					self::$body = $data;
+				elseif( $body && !$data )
+					self::set_status_exit(400);
+				break;
 
-			} else {
-				// broken/missing resource class
-				self::status_exit(500);
-			}
-		} else {
-			// resource doesn't exist
-			self::status_exit(404);
+			case 'query_string':
+				parse_str($body, $data);
+				if( is_array($data) )
+					self::$body = $data;
+				else
+					self::set_status_exit(400);
+				break;
+
+			default:
+				self::$body = $body;
+				break;
 		}
 	}
 
-	// Credit where credit is due: https://github.com/nramenta/bento/blob/master/src/bento.php
-	public static function match_route($route, $path, &$matches = null)
-	{
+	public static function create_resource() {
+		$class_file = self::$resource_path.'/'.self::$resource_name.'.php';
+		if( self::$resource_name && file_exists( $class_file ) ) {
+
+			require_once $class_file;
+
+			$resource_class = ucfirst( strtolower( self::$resource_name ) );
+			if( class_exists( $resource_class ) )
+				return new $resource_class;
+
+			// broken/missing resource class
+			self::set_status_exit(500);
+		}
+
+		// resource doesn't exist
+		self::set_status_exit(404);
+	}
+
+	/**
+	 * Credits go to Bento for this one:
+	 * https://github.com/nramenta/bento/blob/master/src/bento.php
+	 */
+	public static function match_route($route, $path, &$matches = null) {
 		$replace = function($match) {
 			if ($match['rule'] === '') {
 				return '(?P<' . $match['name'] . '>[^\/]+)';
@@ -130,14 +161,28 @@ class DreamFactory {
 	    );
 	}
 
+	public static function set_body_type( $type ) {
+		if( in_array($type, self::$allowed_body_types) )
+			self::$body_type = $type;
+	}
+
+	public static function set_associative_json( $assoc ) {
+		if( is_bool($assoc) )
+			self::$associative_json = $assoc;
+	}
+
 	public static function set_headers() {
 		header('Content-Type: application/json');
 	}
 
-	public static function status_exit( $code=200 ) {
+	public static function set_status( $code=200 ) {
 		if( array_key_exists($code, self::$status_codes) ) {
-			header("HTTP/1.1 {$code} ".self::$status_codes[$code], true, $code);
+			header("HTTP/1.1 {$code} ".self::$status_codes[$code], TRUE, $code);
 		}
+	}
+
+	public static function set_status_exit( $code=200 ) {
+		self::set_status( $code );
 		exit();
 	}
 }

@@ -1,10 +1,4 @@
 <?php
 
-require_once 'dreamfactory.php';
-require_once 'dreamresource.php';
-
-DreamFactory::fireup();
-
-$resource = DreamFactory::create_resource();
-$resource->route();
-$resource->output();
+require_once 'dream_factory.php';
+require_once 'dream_resource.php';
