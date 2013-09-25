@@ -1,7 +1,11 @@
 dreamr
 ======
 
-A very slim RESTful framework for PHP
+Another twist on RESTful nano frameworks for PHP 5.3 and up.
+
+You can POST/PUT JSON bodies or Query Strings, returning JSON encoded data.
+
+#Routing
 
 NOTES:
 Routes must always begin with a forward slash. Routes can contain dynamic paths along with their optional rules.
@@ -49,29 +53,25 @@ George Yates for the Dreamr name
 
 Testing with curl
 
-curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome
+curl -i http://www.example.com/post
 
-curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome/50
+curl -i http://dev.dreamr.com/post/50
 
-curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome/50/comments
+curl -i http://dev.dreamr.com/post/50/comments
 
-curl -i -H "Accept: application/json" http://dev.dreamr.com/welcome/50/dynamic
+curl -i -X POST -d '{"":""}' http://dev.dreamr.com/welcome
 
-curl -i -H "Accept: application/json" -X POST -d "firstName=james" http://dev.dreamr.com/welcome
+curl -i -X PUT -d "phone=1-800-999-9999" http://dev.dreamr.com/welcome/50
 
-curl -i -H "Accept: application/json" -X PUT -d "phone=1-800-999-9999" http://dev.dreamr.com/welcome/50
-
-curl -i -H "Accept: application/json" -X DELETE http://dev.dreamr.com/welcome/50
+curl -i -X DELETE http://dev.dreamr.com/welcome/50
 
 # VERB OVERRIDE
 
-curl -i -H "Accept: application/json" -H "X-HTTP-Method-Override: PUT" -X POST -d "phone=1-800-999-9999" http://api.piledrive.com/php 
+curl -i -H "Accept: application/json" -H "X-HTTP-Method-Override: PUT" -X POST -d "phone=1-800-999-9999" http://api.piledrive.com/php
 
 curl -i -H "Accept: application/json" -H "X-HTTP-Method-Override: DELETE" -X POST http://api.piledrive.com/php
 
 Todo
 
-- configuration settings for when we want to json_decode the php://input stream
-- configuration settings for Content-Type output headers (application/json default?)
-- configuration settings for exposing php or not ( remove X-Powered-By: header, etc )
-- rewrite welcome resource to resemble an example blog post resource
+- cleanup this readme doc
+- force routes to match resources with or without an ending "/", via 301 or other
