@@ -18,6 +18,8 @@ class DreamFactory {
 	private static $allowed_body_types = array('json','query_string');
 	private static $associative_json = FALSE;
 
+	private static $resource;
+
 	public static $uri;
 	public static $segments;
 	public static $method;
@@ -97,7 +99,7 @@ class DreamFactory {
 				if( $data )
 					self::$body = $data;
 				elseif( $body && !$data )
-					self::set_status_exit(400);
+					self::abort(400);
 				break;
 
 			case 'query_string':
@@ -105,13 +107,16 @@ class DreamFactory {
 				if( is_array($data) )
 					self::$body = $data;
 				else
-					self::set_status_exit(400);
+					self::abort(400);
 				break;
 
 			default:
 				self::$body = $body;
 				break;
 		}
+
+		self::$resource = self::create_resource();
+		self::$resource->run();
 	}
 
 	public static function create_resource() {
@@ -125,11 +130,11 @@ class DreamFactory {
 				return new $resource_class;
 
 			// broken/missing resource class
-			self::set_status_exit(500);
+			self::abort(500);
 		}
 
 		// resource doesn't exist
-		self::set_status_exit(404);
+		self::abort(404);
 	}
 
 	/**
@@ -176,12 +181,11 @@ class DreamFactory {
 	}
 
 	public static function set_status( $code=200 ) {
-		if( array_key_exists($code, self::$status_codes) ) {
+		if( array_key_exists($code, self::$status_codes) )
 			header("HTTP/1.1 {$code} ".self::$status_codes[$code], TRUE, $code);
-		}
 	}
 
-	public static function set_status_exit( $code=200 ) {
+	public static function abort( $code=200 ) {
 		self::set_status( $code );
 		exit();
 	}

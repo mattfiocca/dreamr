@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Resource Abstract Class
+ *
+ * @package Dreamr
+ * @license http://opensource.org/licenses/gpl-license.php  GNU Public License
+ * @author Matt Fiocca <matt.fiocca@gmail.com>
+ */
 abstract class DreamResource {
 
 	private $data;
@@ -12,17 +19,17 @@ abstract class DreamResource {
 		$resource_name = DreamFactory::$resource_name;
 		$base_routes = array(
 			'get' => array(
-				"/{$resource_name}" => 'find_many',
-				"/{$resource_name}/<#:id>" => 'find'
+				"/{$resource_name}/" => 'find_many',
+				"/{$resource_name}/<#:id>/" => 'find'
 			),
 			'post' => array(
-				"/{$resource_name}" => 'create'
+				"/{$resource_name}/" => 'create'
 			),
 			'put' => array(
-				"/{$resource_name}/<#:id>" => 'update'
+				"/{$resource_name}/<#:id>/" => 'update'
 			),
 			'delete' => array(
-				"/{$resource_name}/<#:id>" => 'delete'
+				"/{$resource_name}/<#:id>/" => 'delete'
 			)
 		);
 
@@ -31,9 +38,9 @@ abstract class DreamResource {
 		else
 			$routes = array_merge_recursive($base_routes, $this->routes());
 
-		if( is_array( $routes ) && array_key_exists(DreamFactory::$method, $routes) )
-		{
-			foreach($routes[DreamFactory::$method] as $route=>$method) {
+		if( is_array( $routes ) && array_key_exists(DreamFactory::$method, $routes) ) {
+
+			foreach($routes[DreamFactory::$method] as $route=>$class_method) {
 
 				if ( DreamFactory::match_route( $route, DreamFactory::$uri, $matches ) ) {
 
@@ -47,25 +54,26 @@ abstract class DreamResource {
 							$data['params'][$key] = urldecode($val);
 					}
 
-					if( method_exists($this, $method) ) {
-						$this->data = call_user_func_array( array($this, $method), $data );
+					if( method_exists($this, $class_method) ) {
+						$this->data = call_user_func_array( array($this, $class_method), $data );
 						$this->output();
 						return;
 					}
 				}
 			}
 
-			// @todo route doesn't exist
-			$this->response(404);
+			// route doesn't exist
+			$this->abort(404);
 
 		} else {
-			// @todo broken/missing routes
-			$this->response(500);
+
+			// method not allowed
+			$this->abort(405);
 		}
 	}
 
-	public function response( $code ) {
-		DreamFactory::set_status($code);
+	public function abort( $code ) {
+		DreamFactory::abort($code);
 	}
 
 	private function output() {

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Example Index Resource
+ *
+ * @package Dreamr
+ * @license http://opensource.org/licenses/gpl-license.php  GNU Public License
+ * @author Matt Fiocca <matt.fiocca@gmail.com>
+ */
 class Index extends DreamResource {
 
 	public $reset_routes = TRUE;
@@ -7,12 +14,12 @@ class Index extends DreamResource {
 	public function routes() {
 		return array(
 			'get' => array(
-				'/' => 'index'
+				'/' => '_index'
 			)
 		);
 	}
 
-	public function index() {
-		$this->response(400);
+	public function _index() {
+		$this->abort(405);
 	}
 }
