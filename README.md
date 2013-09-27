@@ -1,40 +1,202 @@
-dreamr
+Dreamr
 ======
 
-Another twist on RESTful nano frameworks for PHP 5.3 and up.
+A twist on RESTful nano frameworks for PHP 5.3 and up. Supports POST/PUTting JSON bodies or Query Strings, returns JSON encoded data.
+This framework uses the route matching system from Bento:
 
-You can POST/PUT JSON bodies or Query Strings, returning JSON encoded data.
+@nramenta
+https://github.com/nramenta/bento/blob/master/src/bento.php
+
+#Setup
+
+```php
+<?php
+
+// Bootstrap Dreamr
+require_once 'core/dreamr.php';
+
+// Fireup it up
+DreamFactory::start();
+```
+
+You can also pass configuration variables this way:
+
+```php
+...
+
+// Fireup it up
+DreamFactory::start(array(
+	'setting1' => 'mysetting1',
+	'setting2' => 'mysetting2'
+));
+```
+
+Then, create resources in the /resources/ directory. In this example we'll create a Posts resource:
+
+```php
+<?php
+
+class Posts extends DreamResource {
+
+	/**
+	 * Optional
+	 * Set to TRUE to wipe out the predefined routes below
+	 */
+	public $reset_routes = FALSE;
+
+	/**
+	 * Define custom routes for the Posts resource below
+	 *
+	 * These routes are created for you automatically:
+	 *
+	 *	'get' => array(
+	 *		"/posts/" => 'find_many',
+	 *		"/posts/<#:id>/" => 'find',
+	 *	),
+	 *	'post' => array(
+	 *		"/posts/" => 'create'
+	 *	),
+	 *	'put' => array(
+	 *		"/posts/<#:id>/" => 'update'
+	 *	),
+	 *	'delete' => array(
+	 *		"/posts/<#:id>/" => 'delete'
+	 *	)
+	 *
+	 * @return array
+	 */
+	public function routes() {
+		return array(
+			'get' => array(
+				'/posts/<#:postid>/comments/' => 'comments'
+			),
+			'post' => array(
+				'/posts/<#:postid>/comments/' => 'create_comment'
+			)
+		);
+	}
+
+	/**
+	 * Free Route Method
+	 *
+	 * @param array $params Associative array of params passed in the dynamic URL segments
+	 * @return array Returning an array will auto-encode to JSON
+	 */
+	public function find( $params ) {
+		return array(
+			'id' => $params['postid'],
+			'post' => array(),
+			'method' => 'find'
+		);
+	}
+
+	/**
+	 * Free Route Method
+	 *
+	 * @return array Returning an array will auto-encode to JSON
+	 */
+	public function find_many() {
+		return array(
+			'posts' => array(),
+			'method' => 'find_many'
+		);
+	}
+
+	/**
+	 * Free Route Method
+	 *
+	 * @param array $params Associative array of params passed in the dynamic URL segments
+	 * @param array $data Associative array of data passed from a POST or PUT body
+	 * @return array Returning an array will auto-encode to JSON
+	 */
+	public function create( $params, $data ) {
+		return array(
+			'post_data' => $data,
+			'method' => 'create'
+		);
+	}
+
+	/**
+	 * Free Route Method
+	 *
+	 * Status 200 will respond on a successful return anyway,
+	 * but you can call explicitly if you want like below
+	 *
+	 * Available status codes are in: DreamrFactory::$status_codes
+	 */
+	public function update() {
+		$this->abort(200);
+	}
+
+	/**
+	 * Free Route Method
+	 *
+	 * @param array $params Associative array of params passed in the dynamic URL segments
+	 * @return array Returning an array will auto-encode to JSON
+	 */
+	public function delete( $params ) {
+		return array(
+			'id' => $params['postid'],
+			'method' => 'delete'
+		);
+	}
+
+	/**
+	 * Custom Route Method
+	 *
+	 * @param array $params Associative array of params passed in the dynamic URL segments
+	 * @return array Returning an array will auto-encode to JSON
+	 */
+	public function comments( $params ) {
+		return array(
+			'postid' => $params['postid'],
+			'comments' => array(),
+			'method' => 'comments'
+		);
+	}
+
+	/**
+	 * Custom Route Method
+	 *
+	 * This example shows how to abort with a 'Not Authorized'
+	 */
+	public function create_comment() {
+		$this->abort(401);
+	}
+}
+```
 
 #Routing
 
-NOTES:
+(Written By @nramenta, Bento)
+
 Routes must always begin with a forward slash. Routes can contain dynamic paths along with their optional rules.
 Dynamic paths will be translated to positional parameters passed on to the route handler.
 They can also be accessed using the params() function.
 
 The syntax for dynamic paths is:
-<rule:name>
+\<rule:name\>
 
 The rule is optional; if you omit it, be sure to also omit the : separator.
 Named paths without rules matches all characters up to but not including /.
 
 Some examples of routes:
 
-/posts/<#:id>
-/users/<username>
+/posts/\<\#:id\>
+/users/\<username\>
 /pages/about
-/blog/<#:year>/<#:month>/<#:date>/<#:id>-<$:title>
-/files/<:path>
+/blog/\<\#:year\>/\<\#:month\>/\<\#:date\>/\<\#:id\>-\<\$:title\>
+/files/\<:path\>
 
 There are three built-in rules:
 
-#: digits only, equivalent to \d+.
-$: alphanums and dashes only, equivalent to [a-zA-Z0-9-_]+.
-: any characters including /, equivalent to .+.
+\#: digits only, equivalent to \d+.
+\$: alphanums and dashes only, equivalent to [a-zA-Z0-9-_]+.
+\: any characters including /, equivalent to .+.
 
 Custom rules are defined using regular expressions:
 
-/users/<[a-zA-Z0-9_]+:username>
+/users/\<[a-zA-Z0-9_]+:username\>
 
 Using the # character inside a custom rule should be avoided;
 URL paths cannot contain any # characters as they are interpreted as URL fragments.
@@ -44,34 +206,31 @@ Routes are matched first-only, meaning if a route matches the request path then 
 will be executed and no more routes will be matched. Requests that do not match any
 routes will yield a "404 Not Found" error.
 
-Credits
+#Testing
 
-Bento (route matching regex):
-https://github.com/nramenta/bento/blob/master/src/bento.php
+curl -i -X GET \http://www.[website].com/posts/
 
-George Yates for the Dreamr name
+curl -i -X GET \http://dev.[website].com/posts/50/
 
-Testing with curl
+curl -i -X GET \http://dev.[website].com/posts/50/comments/
 
-curl -i http://www.example.com/post
+curl -i -X POST -d '{"title":"This is a title", "description":"This is a description"}' \http://www.[website].com/posts/
 
-curl -i http://dev.dreamr.com/post/50
+curl -i -X POST -d '{"comment":"This is a comment"}' \http://www.[website].com/posts/50/comments/
 
-curl -i http://dev.dreamr.com/post/50/comments
+curl -i -X PUT -d '{"title":"This is a new title", "description":"This is a new description"}' http://www.[website].com/posts/50/
 
-curl -i -X POST -d '{"":""}' http://dev.dreamr.com/welcome
+curl -i -X DELETE http://www.[website].com/posts/50/
 
-curl -i -X PUT -d "phone=1-800-999-9999" http://dev.dreamr.com/welcome/50
+#Credits
 
-curl -i -X DELETE http://dev.dreamr.com/welcome/50
+@nramenta - route matching
+@gyatesiii - Coming up with the Dreamr name
 
-# VERB OVERRIDE
+#Todo
 
-curl -i -H "Accept: application/json" -H "X-HTTP-Method-Override: PUT" -X POST -d "phone=1-800-999-9999" http://api.piledrive.com/php
-
-curl -i -H "Accept: application/json" -H "X-HTTP-Method-Override: DELETE" -X POST http://api.piledrive.com/php
-
-Todo
-
-- cleanup this readme doc
-- force routes to match resources with or without an ending "/", via 301 or other
+- implement 'Blankets'
+- Configuration options
+- Force routes to match resources with or without an ending "/", via 301 or other
+- Exceptions?
+- Auth?
