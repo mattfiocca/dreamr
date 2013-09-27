@@ -16,9 +16,9 @@ class Posts extends DreamResource {
 	public $reset_routes = FALSE;
 
 	/**
-	 * Define custom routes for the Posts resource below
+	 * Define custom routes for this resource
 	 *
-	 * These routes are created for you automatically:
+	 * Here are some routes for free:
 	 *
 	 *	'get' => array(
 	 *		"/posts/" => 'find_many',

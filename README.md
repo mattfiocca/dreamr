@@ -9,13 +9,15 @@ https://github.com/nramenta/bento/blob/master/src/bento.php
 
 #Setup
 
+Just require the dreamr.php library in your index.php file, then fire it up:
+
 ```php
 <?php
 
 // Bootstrap Dreamr
 require_once 'core/dreamr.php';
 
-// Fireup it up
+// Fire it up
 DreamFactory::start();
 ```
 
@@ -23,7 +25,6 @@ You can also pass configuration variables this way:
 
 ```php
 ...
-
 // Fireup it up
 DreamFactory::start(array(
 	'setting1' => 'mysetting1',
@@ -45,9 +46,9 @@ class Posts extends DreamResource {
 	public $reset_routes = FALSE;
 
 	/**
-	 * Define custom routes for the Posts resource below
+	 * Define custom routes for this resource
 	 *
-	 * These routes are created for you automatically:
+	 * Here are some routes for free:
 	 *
 	 *	'get' => array(
 	 *		"/posts/" => 'find_many',
@@ -166,7 +167,7 @@ class Posts extends DreamResource {
 }
 ```
 
-#Routing
+#Routing Notes
 
 (Written By @nramenta, Bento)
 
@@ -175,28 +176,37 @@ Dynamic paths will be translated to positional parameters passed on to the route
 They can also be accessed using the params() function.
 
 The syntax for dynamic paths is:
-\<rule:name\>
+
+```
+<rule:name>
+```
 
 The rule is optional; if you omit it, be sure to also omit the : separator.
 Named paths without rules matches all characters up to but not including /.
 
 Some examples of routes:
 
-/posts/\<\#:id\>
-/users/\<username\>
+```
+/posts/<#:id>
+/users/<username>
 /pages/about
-/blog/\<\#:year\>/\<\#:month\>/\<\#:date\>/\<\#:id\>-\<\$:title\>
-/files/\<:path\>
+/blog/<#:year>/<#:month>/<#:date>/<#:id>-<$:title>
+/files/<:path>
+```
 
 There are three built-in rules:
 
-\#: digits only, equivalent to \d+.
-\$: alphanums and dashes only, equivalent to [a-zA-Z0-9-_]+.
-\: any characters including /, equivalent to .+.
+```
+#: digits only, equivalent to \d+.
+$: alphanums and dashes only, equivalent to [a-zA-Z0-9-_]+.
+: any characters including /, equivalent to .+.
+```
 
 Custom rules are defined using regular expressions:
 
-/users/\<[a-zA-Z0-9_]+:username\>
+```
+/users/<[a-zA-Z0-9_]+:username>
+```
 
 Using the # character inside a custom rule should be avoided;
 URL paths cannot contain any # characters as they are interpreted as URL fragments.
@@ -208,23 +218,23 @@ routes will yield a "404 Not Found" error.
 
 #Testing
 
-curl -i -X GET \http://www.[website].com/posts/
+curl -i -X GET [website]/posts/
 
-curl -i -X GET \http://dev.[website].com/posts/50/
+curl -i -X GET [website]/posts/50/
 
-curl -i -X GET \http://dev.[website].com/posts/50/comments/
+curl -i -X GET [website]/posts/50/comments/
 
-curl -i -X POST -d '{"title":"This is a title", "description":"This is a description"}' \http://www.[website].com/posts/
+curl -i -X POST -d '{"title":"This is a title", "description":"This is a description"}' [website]/posts/
 
-curl -i -X POST -d '{"comment":"This is a comment"}' \http://www.[website].com/posts/50/comments/
+curl -i -X POST -d '{"comment":"This is a comment"}' [website]/posts/50/comments/
 
-curl -i -X PUT -d '{"title":"This is a new title", "description":"This is a new description"}' http://www.[website].com/posts/50/
+curl -i -X PUT -d '{"title":"This is a new title", "description":"This is a new description"}' [website]/posts/50/
 
-curl -i -X DELETE http://www.[website].com/posts/50/
+curl -i -X DELETE [website]/posts/50/
 
 #Credits
 
-@nramenta - route matching
+@nramenta - route matching 
 @gyatesiii - Coming up with the Dreamr name
 
 #Todo
